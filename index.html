@@ -1,0 +1,2295 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة درجات الطلاب - تصميم ابوياسين</title>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2c3e50;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --midterm: #e8f4fd;
+            --final: #d5e8ff;
+            --total: #d4edda;
+            --excellent: #28a745;
+            --very-good: #17a2b8;
+            --good: #ffc107;
+            --pass: #fd7e14;
+            --fail: #dc3545;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.3s ease;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 0;
+            direction: rtl;
+        }
+        
+        .container {
+            width: 98%;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 10px 5px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+            border-bottom: 5px solid var(--primary);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+        
+        .app-description {
+            max-width: 800px;
+            margin: 0 auto;
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            margin: 15px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            background: #e9ecef;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .tab:hover:not(.active) {
+            background: #d1d7dc;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            height: fit-content;
+            font-size: 0.95rem;
+        }
+        
+        .content {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            overflow-x: auto;
+            min-height: 600px;
+        }
+        
+        .section-title {
+            color: var(--secondary);
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-title .controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 0.95rem;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border 0.3s;
+            text-align: right;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+        }
+        
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+        }
+        
+        .btn-warning:hover {
+            background-color: #e67e22;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 8px;
+            max-height: 500px;
+            overflow-y: auto;
+            position: relative;
+            transition: padding-bottom 0.3s ease;
+        }
+        
+        .keyboard-visible .table-container {
+            padding-bottom: 150px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+            text-align: right;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+        
+        th {
+            background-color: var(--secondary);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        
+        /* تثبيت الرأس عند التمرير الرأسي */
+        #gradesTable thead tr:first-child th {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+        
+        #gradesTable thead tr:nth-child(2) th {
+            position: sticky;
+            top: 40px;
+            z-index: 20;
+        }
+        
+        /* نفس الشيء لجدول التقرير */
+        #reportTable thead tr:first-child th {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+        
+        #reportTable thead tr:nth-child(2) th {
+            position: sticky;
+            top: 40px;
+            z-index: 20;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        tr:hover {
+            background-color: #f1f7ff;
+        }
+        
+        .midterm-cell {
+            background-color: var(--midterm);
+            width: 60px !important;
+            min-width: 60px !important;
+        }
+        
+        .final-cell {
+            background-color: var(--final);
+            width: 60px !important;
+            min-width: 60px !important;
+        }
+        
+        .total-cell {
+            background-color: var(--total);
+            font-weight: bold;
+            width: 70px !important;
+            min-width: 70px !important;
+        }
+        
+        .subject-header {
+            background-color: #3a506b;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .symbol-header {
+            background-color: #2c3e50;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .grade-label {
+            font-weight: bold;
+            margin: 0 5px;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        .excellent-color { background-color: #28a745; }
+        .very-good-color { background-color: #17a2b8; }
+        .good-color { background-color: #ffc107; }
+        .pass-color { background-color: #fd7e14; }
+        .fail-color { background-color: #dc3545; }
+        
+        /* تم تعديل عرض عمود الأسماء وتصغيره */
+        .student-name-cell {
+            min-width: 120px;
+            max-width: 150px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* لوحة المفاتيح الرقمية - تم التعديل */
+        .number-keyboard {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #f1f1f1;
+            padding: 10px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+            border-top: 1px solid #ddd;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .number-keyboard.visible {
+            transform: translateY(0);
+            display: block;
+        }
+        
+        .keyboard-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .keyboard-btn {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            color: #333;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .keyboard-btn:hover {
+            background-color: #e9ecef;
+        }
+        
+        .keyboard-btn:active {
+            background-color: #d1d7dc;
+            transform: scale(0.95);
+        }
+        
+        .keyboard-action {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .keyboard-action:hover {
+            background-color: #2980b9;
+        }
+        
+        .keyboard-delete {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .keyboard-delete:hover {
+            background-color: #c0392b;
+        }
+        
+        .keyboard-close {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .keyboard-close:hover {
+            background-color: #e67e22;
+        }
+        
+        /* تحسينات لوضع التركيز */
+        .compact-view .sidebar,
+        .compact-view .class-info,
+        .compact-view .legend,
+        .compact-view .action-buttons,
+        .compact-view .section-title .controls {
+            display: none !important;
+        }
+        
+        .compact-view .content {
+            grid-column: 1 / -1;
+            padding: 5px;
+        }
+        
+        .compact-view .table-container {
+            max-height: calc(100vh - 100px);
+        }
+        
+        .compact-view header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 5px 0;
+            height: auto;
+            z-index: 1000;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+        }
+        
+        .compact-view header .container {
+            display: flex;
+            justify-content: flex-end;
+            padding: 0 10px;
+        }
+        
+        .compact-view header h1,
+        .compact-view header .app-description,
+        .compact-view header .back-btn {
+            display: none;
+        }
+        
+        .compact-view header .view-toggle {
+            background-color: white;
+            color: var(--primary);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin: 0;
+        }
+        
+        .compact-view header .view-toggle:hover {
+            background-color: #e9ecef;
+        }
+        
+        .compact-view .exit-focus-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 2000;
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .keyboard-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 5px;
+            }
+            
+            .keyboard-btn {
+                padding: 12px 8px;
+                font-size: 1.1rem;
+            }
+            
+            .keyboard-btn[data-key="00"],
+            .keyboard-btn[data-key="000"] {
+                font-size: 0.9rem;
+            }
+            
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .compact-view .content {
+                padding: 5px 0;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .keyboard-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+            
+            .keyboard-btn {
+                padding: 10px 5px;
+                font-size: 1rem;
+            }
+            
+            .keyboard-btn[data-key="00"],
+            .keyboard-btn[data-key="000"] {
+                font-size: 0.8rem;
+            }
+            
+            .section-title {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .section-title .controls {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            /* تحسين التمرير على الأجهزة المحمولة */
+            .table-container {
+                max-height: 300px;
+            }
+        }
+        
+        .alert {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .delete-btn:hover {
+            background: #c0392b;
+            transform: scale(1.05);
+        }
+        
+        .grade-input {
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid transparent !important;
+            max-width: 50px;
+            padding: 5px;
+            margin: 0 auto;
+            display: block;
+        }
+        
+        .grade-input:focus {
+            border-color: var(--primary) !important;
+            background-color: #fffde7;
+        }
+        
+        .focused-input {
+            border: 2px solid var(--primary) !important;
+            background-color: #fffde7;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+            transform: scale(1.02);
+            animation: pulse 1s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 5px rgba(52, 152, 219, 0.5); }
+            100% { box-shadow: 0 0 10px rgba(52, 152, 219, 0.8); }
+        }
+        
+        /* رسائل التحقق من النطاق */
+        .grade-error {
+            position: absolute;
+            background: var(--danger);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            z-index: 100;
+            white-space: nowrap;
+            margin-top: -30px;
+            margin-right: -10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .grade-error::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px 5px 0;
+            border-style: solid;
+            border-color: var(--danger) transparent transparent;
+        }
+        
+        .auto-navigation-indicator {
+            position: fixed;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .toggle-keyboard-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: var(--primary);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .toggle-keyboard-btn i {
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-keyboard-btn.visible i {
+            transform: rotate(180deg);
+        }
+        
+        .navigation-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .navigation-control label {
+            margin: 0;
+            font-weight: normal;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #2ecc71;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .input-hint {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+            padding: 8px;
+            background-color: #e8f4f8;
+            border-radius: 5px;
+            border: 1px solid #b6e0fe;
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+        
+        .nav-success {
+            animation: navSuccess 0.5s ease;
+        }
+        
+        @keyframes navSuccess {
+            0% { background-color: #d4edda; }
+            50% { background-color: #28a745; color: white; }
+            100% { background-color: #d4edda; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="#" class="back-btn">
+            <i class="fas fa-arrow-right"></i> العودة
+        </a>
+        <button class="view-toggle" id="viewToggle">
+            <i class="fas fa-compress"></i> وضع التركيز
+        </button>
+        <div class="container">
+            <h1><i class="fas fa-graduation-cap"></i> نظام إدارة درجات الطلاب - تصميم ابوياسين</h1>
+            <p class="app-description">واجهة متطورة لإدخال درجات الطلاب مع تنقل تلقائي بين الحقول</p>
+        </div>
+    </header>
+
+    <div class="auto-navigation-indicator" id="navIndicator" style="display: none;">
+        <i class="fas fa-arrow-right"></i> يتم التنقل التلقائي بين الحقول
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" data-tab="entry">إدخال الدرجات</div>
+            <div class="tab" data-tab="report">كشف الدرجات</div>
+        </div>
+        
+        <div class="alert alert-danger" id="errorAlert"></div>
+        <div class="alert alert-success" id="successAlert"></div>
+        
+        <!-- واجهة إدخال الدرجات -->
+        <div class="tab-content active" id="entryTab">
+            <div class="main-content">
+                <div class="sidebar">
+                    <h2 class="section-title"><i class="fas fa-database"></i> إدارة البيانات</h2>
+                    
+                    <div class="form-group">
+                        <label for="gradeLevel"><i class="fas fa-school"></i> الصف الدراسي</label>
+                        <select id="gradeLevel">
+                            <option value="">اختر الصف الدراسي</option>
+                            <option value="الأول">الصف الأول</option>
+                            <option value="الثاني">الصف الثاني</option>
+                            <option value="الثالث">الصف الثالث</option>
+                            <option value="الرابع">الصف الرابع</option>
+                            <option value="الخامس">الصف الخامس</option>
+                            <option value="السادس">الصف السادس</option>
+                            <option value="السابع">الصف السابع</option>
+                            <option value="الثامن">الصف الثامن</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="className"><i class="fas fa-users"></i> ٳسم الشعبة</label>
+                        <input type="text" id="className" placeholder="أدخل ٳسم الشعبة">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="studentName"><i class="fas fa-user"></i> اسم الطالب</label>
+                        <input type="text" id="studentName" placeholder="أدخل اسم الطالب">
+                        <button class="btn-success" id="addStudentBtn" style="margin-top: 10px; width:100%;">
+                            <i class="fas fa-user-plus"></i> إضافة طالب
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button class="btn-success" id="addMultipleStudentsBtn" style="width:100%;">
+                            <i class="fas fa-users"></i> إضافة عدة طلاب
+                        </button>
+                    </div>
+                    
+                    <div id="multipleStudentsModal" style="display: none; margin-top: 15px; background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                        <label for="studentsList">أدخل أسماء الطلاب (كل اسم في سطر):</label>
+                        <textarea id="studentsList" rows="5" placeholder="أحمد محمد
+فاطمة عبدالله
+خالد حسن
+..." style="width: 100%; margin: 10px 0;"></textarea>
+                        <div class="action-buttons" style="display: flex; gap: 10px;">
+                            <button class="btn-success" id="saveStudentsBtn"><i class="fas fa-save"></i> إضافة الطلاب</button>
+                            <button class="btn-danger" id="cancelStudentsBtn"><i class="fas fa-times"></i> إلغاء</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subjectName"><i class="fas fa-book"></i> اسم المادة</label>
+                        <input type="text" id="subjectName" placeholder="أدخل اسم المادة">
+                        <button class="btn-success" id="addSubjectBtn" style="margin-top: 10px; width:100%;">
+                            <i class="fas fa-book-medical"></i> إضافة مادة
+                        </button>
+                    </div>
+                    
+                    <div class="teacher-view" id="teacherView">
+                        <h3 style="font-size: 1.1rem;"><i class="fas fa-chalkboard-teacher"></i> واجهة المعلم</h3>
+                        <p id="teacherSubject" style="margin-bottom: 10px; font-weight: bold;">المادة: الرياضيات</p>
+                        <div class="teacher-controls" style="display: flex; gap: 10px;">
+                            <button id="saveGradesBtn"><i class="fas fa-save"></i> حفظ</button>
+                            <button class="btn-danger" id="cancelEditBtn"><i class="fas fa-times"></i> إلغاء</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content">
+                    <h2 class="section-title">
+                        <i class="fas fa-table"></i> جدول الدرجات
+                        <div class="controls">
+                            <button class="btn-warning" id="calculateBtn"><i class="fas fa-calculator"></i> حساب المعدلات</button>
+                            <button class="btn-success" id="saveAllBtn"><i class="fas fa-save"></i> حفظ الكل</button>
+                        </div>
+                    </h2>
+                    <div class="class-info" style="display: flex; gap: 20px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <p><strong><i class="fas fa-school"></i> الصف:</strong> <span id="currentGrade">-</span></p>
+                        <p><strong><i class="fas fa-users"></i> الفصل:</strong> <span id="currentClass">-</span></p>
+                        <p><strong><i class="fas fa-user-graduate"></i> عدد الطلاب:</strong> <span id="studentCount">٠</span></p>
+                        <p><strong><i class="fas fa-book"></i> عدد المواد:</strong> <span id="subjectCount">٠</span></p>
+                    </div>
+                    
+                    <div class="navigation-control">
+                        <label>
+                            <span class="switch">
+                                <input type="checkbox" id="autoNavToggle" checked>
+                                <span class="slider"></span>
+                            </span>
+                            <span>التنقل التلقائي بين الحقول</span>
+                        </label>
+                        <span class="btn-primary" id="navHelpBtn" style="padding: 5px 10px; font-size: 0.9rem;">
+                            <i class="fas fa-info-circle"></i> مساعدة
+                        </span>
+                    </div>
+                    
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color excellent-color"></div>
+                            <span></span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color very-good-color"></div>
+                            <span></span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color good-color"></div>
+                            <span></span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color pass-color"></div>
+                            <span></span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color fail-color"></div>
+                            <span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="gradesTable">
+                            <thead>
+                                <tr id="gradesTableHeader">
+                                    <th style="width: 50px;">م</th>
+                                    <th class="student-name-cell">اسم الطالب</th>
+                                    <!-- سيتم إضافة عناوين المواد ديناميكياً -->
+                                    <th class="average-cell">المعدل</th>
+                                    <th style="width: 70px;">حذف</th>
+                                </tr>
+                                <tr id="gradesTableSubHeader">
+                                    <th></th>
+                                    <th></th>
+                                    <!-- سيتم إضافة عناوين فرعية للمواد ديناميكياً -->
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="gradesTableBody">
+                                <!-- سيتم إضافة صفوف الطلاب ديناميكياً -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="action-buttons" style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button class="btn-success" id="autoFillBtn"><i class="fas fa-magic"></i> تعبئة تلقائية</button>
+                        <button class="btn-warning" id="resetBtn"><i class="fas fa-redo"></i> إعادة تعيين</button>
+                        <button class="btn-danger" id="clearDataBtn"><i class="fas fa-trash"></i> مسح البيانات</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- واجهة كشف الدرجات -->
+        <div class="tab-content" id="reportTab">
+            <div class="content">
+                <h2 class="section-title">
+                    <i class="fas fa-file-alt"></i> كشف الدرجات النهائي
+                    <div class="controls">
+                        <button class="btn-success" id="copyBtn"><i class="fas fa-copy"></i> نسخ</button>
+                        <button class="btn-success" id="excelBtn"><i class="fas fa-file-excel"></i> إكسل</button>
+                        <button class="btn-warning" id="printBtn"><i class="fas fa-print"></i> طباعة</button>
+                    </div>
+                </h2>
+                
+                <div class="class-info" style="display: flex; gap: 20px; margin-bottom: 15px; flex-wrap: wrap;">
+                    <p><strong><i class="fas fa-school"></i> الصف:</strong> <span id="reportGrade">-</span></p>
+                    <p><strong><i class="fas fa-users"></i> الفصل:</strong> <span id="reportClass">-</span></p>
+                    <p><strong><i class="fas fa-user-graduate"></i> عدد الطلاب:</strong> <span id="reportStudentCount">٠</span></p>
+                    <p><strong><i class="fas fa-book"></i> عدد المواد:</strong> <span id="reportSubjectCount">٠</span></p>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color excellent-color"></div>
+                        <span></span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color very-good-color"></div>
+                        <span></span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color good-color"></div>
+                        <span></span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color pass-color"></div>
+                        <span></span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color fail-color"></div>
+                        <span></span>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table id="reportTable">
+                        <thead>
+                            <tr id="reportTableHeader">
+                                <th style="width: 50px;">م</th>
+                                <th class="student-name-cell">اسم الطالب</th>
+                                <!-- سيتم إضافة عناوين المواد ديناميكياً -->
+                                <th class="average-cell">المعدل</th>
+                            </tr>
+                            <tr id="reportTableSubHeader">
+                                <th></th>
+                                <th></th>
+                                <!-- سيتم إضافة عناوين فرعية للمواد ديناميكياً -->
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody">
+                            <!-- سيتم إضافة صفوف الطلاب ديناميكياً -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- زر طي/فتح لوحة المفاتيح -->
+    <div class="toggle-keyboard-btn" id="toggleKeyboardBtn">
+        <i class="fas fa-keyboard"></i>
+    </div>
+    
+    <!-- لوحة المفاتيح الرقمية - محسنة -->
+    <div class="number-keyboard" id="numberKeyboard">
+        <div class="keyboard-grid">
+            <button class="keyboard-btn" data-key="1">1</button>
+            <button class="keyboard-btn" data-key="2">2</button>
+            <button class="keyboard-btn" data-key="3">3</button>
+            <button class="keyboard-btn keyboard-delete" data-key="delete"><i class="fas fa-backspace"></i></button>
+            <button class="keyboard-btn keyboard-close" data-key="close"><i class="fas fa-times"></i></button>
+            
+            <button class="keyboard-btn" data-key="4">4</button>
+            <button class="keyboard-btn" data-key="5">5</button>
+            <button class="keyboard-btn" data-key="6">6</button>
+            <button class="keyboard-btn keyboard-action" data-key="enter"><i class="fas fa-arrow-right"></i> التالي</button>
+            <button class="keyboard-btn" data-key="0">0</button>
+            
+            <button class="keyboard-btn" data-key="7">7</button>
+            <button class="keyboard-btn" data-key="8">8</button>
+            <button class="keyboard-btn" data-key="9">9</button>
+            <button class="keyboard-btn" data-key="00">00</button>
+            <button class="keyboard-btn" data-key="000">000</button>
+        </div>
+    </div>
+    
+    <button class="exit-focus-btn" id="exitFocusBtn" style="display: none;">
+        <i class="fas fa-expand"></i> الخروج من وضع التركيز
+    </button>
+
+    <script>
+        // دالة لتحويل الأرقام إلى الأرقام العربية الهندية
+        function toArabicNumerals(number) {
+            if (number === undefined || number === null || number === '') return '';
+            const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            return number.toString().replace(/\d/g, digit => arabicNumerals[digit]);
+        }
+        
+        // دالة لتحويل الأرقام الغربية إلى الأرقام العربية الهندية
+        function toWesternNumerals(arabicString) {
+            if (!arabicString) return '';
+            const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            const westernDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+            return arabicString.replace(new RegExp(`[${arabicNumerals.join('')}]`, 'g'), char => 
+                westernDigits[arabicNumerals.indexOf(char)]
+            );
+        }
+
+        // دالة لتحويل الأرقام في سلسلة نصية إلى الأرقام الهندية
+        function convertNumbersInString(str) {
+            const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            return str.replace(/\d/g, digit => arabicNumerals[digit]);
+        }
+
+        // بنية البيانات
+        let classData = {
+            gradeLevel: '',
+            className: '',
+            students: [],
+            subjects: [],
+            grades: {} // {studentName: {subject: {midterm, final, total}}}
+        };
+
+        // عناصر DOM
+        const gradeLevelSelect = document.getElementById('gradeLevel');
+        const classNameInput = document.getElementById('className');
+        const studentNameInput = document.getElementById('studentName');
+        const subjectNameInput = document.getElementById('subjectName');
+        const addStudentBtn = document.getElementById('addStudentBtn');
+        const addSubjectBtn = document.getElementById('addSubjectBtn');
+        const gradesTable = document.getElementById('gradesTable');
+        const gradesTableHeader = document.getElementById('gradesTableHeader');
+        const gradesTableSubHeader = document.getElementById('gradesTableSubHeader');
+        const gradesTableBody = document.getElementById('gradesTableBody');
+        const reportTable = document.getElementById('reportTable');
+        const reportTableHeader = document.getElementById('reportTableHeader');
+        const reportTableSubHeader = document.getElementById('reportTableSubHeader');
+        const reportTableBody = document.getElementById('reportTableBody');
+        const currentGradeSpan = document.getElementById('currentGrade');
+        const reportGradeSpan = document.getElementById('reportGrade');
+        const currentClassSpan = document.getElementById('currentClass');
+        const reportClassSpan = document.getElementById('reportClass');
+        const studentCountSpan = document.getElementById('studentCount');
+        const subjectCountSpan = document.getElementById('subjectCount');
+        const reportStudentCountSpan = document.getElementById('reportStudentCount');
+        const reportSubjectCountSpan = document.getElementById('reportSubjectCount');
+        const teacherView = document.getElementById('teacherView');
+        const teacherSubject = document.getElementById('teacherSubject');
+        const saveGradesBtn = document.getElementById('saveGradesBtn');
+        const saveAllBtn = document.getElementById('saveAllBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const clearDataBtn = document.getElementById('clearDataBtn');
+        const autoFillBtn = document.getElementById('autoFillBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const excelBtn = document.getElementById('excelBtn');
+        const printBtn = document.getElementById('printBtn');
+        const errorAlert = document.getElementById('errorAlert');
+        const successAlert = document.getElementById('successAlert');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const viewToggle = document.getElementById('viewToggle');
+        const addMultipleStudentsBtn = document.getElementById('addMultipleStudentsBtn');
+        const multipleStudentsModal = document.getElementById('multipleStudentsModal');
+        const studentsListTextarea = document.getElementById('studentsList');
+        const saveStudentsBtn = document.getElementById('saveStudentsBtn');
+        const cancelStudentsBtn = document.getElementById('cancelStudentsBtn');
+        const numberKeyboard = document.getElementById('numberKeyboard');
+        const keyboardButtons = document.querySelectorAll('.keyboard-btn');
+        const exitFocusBtn = document.getElementById('exitFocusBtn');
+        const navIndicator = document.getElementById('navIndicator');
+        const toggleKeyboardBtn = document.getElementById('toggleKeyboardBtn');
+        const autoNavToggle = document.getElementById('autoNavToggle');
+        const navHelpBtn = document.getElementById('navHelpBtn');
+        
+        // متغيرات للتحكم في لوحة المفاتيح
+        let activeInput = null;
+        let autoNavigate = true;
+
+        // تهيئة التطبيق عند التحميل
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            updateUI();
+            
+            // إضافة مستمعات الأحداث
+            addEventListeners();
+            
+            // إضافة مستمعات لوحة المفاتيح
+            setupKeyboard();
+        });
+
+        // إعداد لوحة المفاتيح الرقمية
+        function setupKeyboard() {
+            // إخفاء لوحة المفاتيح عند النقر خارجها
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('.keyboard-btn') && 
+                    !event.target.closest('.grade-input') &&
+                    !event.target.closest('#numberKeyboard') &&
+                    !event.target.closest('#toggleKeyboardBtn')) {
+                    hideKeyboard();
+                }
+            });
+            
+            // إظهار لوحة المفاتيح عند النقر على حقل إدخال
+            document.addEventListener('focusin', function(event) {
+                if (event.target.classList.contains('grade-input')) {
+                    showKeyboard(event.target);
+                }
+            });
+            
+            // إضافة مستمعات الأزرار
+            keyboardButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const key = this.getAttribute('data-key');
+                    handleKeyPress(key);
+                });
+            });
+            
+            // زر طي/فتح لوحة المفاتيح
+            toggleKeyboardBtn.addEventListener('click', function() {
+                if (numberKeyboard.classList.contains('visible')) {
+                    hideKeyboard();
+                } else {
+                    // إذا كان هناك حقل نشط، إظهار لوحة المفاتيح له
+                    if (activeInput) {
+                        showKeyboard(activeInput);
+                    } else {
+                        // إظهار لوحة المفاتيح بدون حقل محدد
+                        showKeyboard();
+                    }
+                }
+            });
+        }
+        
+        // إظهار لوحة المفاتيح
+        function showKeyboard(input) {
+            activeInput = input;
+            numberKeyboard.classList.add('visible');
+            document.body.classList.add('keyboard-visible');
+            toggleKeyboardBtn.classList.add('visible');
+            
+            // إزالة التركيز من جميع الحقول
+            document.querySelectorAll('.grade-input').forEach(i => {
+                i.classList.remove('focused-input');
+            });
+            
+            // إضافة فئة التركيز للحقل النشط
+            if (input) {
+                input.classList.add('focused-input');
+                // تمرير الحقل إلى منطقة مرئية
+                scrollInputIntoView(input);
+            }
+        }
+        
+        // تمرير الحقل إلى منطقة مرئية مع مراعاة لوحة المفاتيح
+        function scrollInputIntoView(input) {
+            const tableContainer = document.querySelector('.table-container');
+            const keyboardHeight = numberKeyboard.offsetHeight;
+            const inputRect = input.getBoundingClientRect();
+            const containerRect = tableContainer.getBoundingClientRect();
+            const offset = 20; // هامش أمان
+            
+            // حساب ما إذا كان الحقل مغطى بلوحة المفاتيح
+            const isCovered = (inputRect.bottom + offset) > (window.innerHeight - keyboardHeight);
+            
+            if (isCovered) {
+                // حساب مقدار التمرير المطلوب
+                const scrollAmount = inputRect.bottom - (window.innerHeight - keyboardHeight) + offset;
+                
+                // تمرير الحاوية
+                tableContainer.scrollTop += scrollAmount;
+            }
+        }
+        
+        // إخفاء لوحة المفاتيح
+        function hideKeyboard() {
+            activeInput = null;
+            numberKeyboard.classList.remove('visible');
+            document.body.classList.remove('keyboard-visible');
+            toggleKeyboardBtn.classList.remove('visible');
+            
+            // إزالة فئة التركيز من جميع الحقول
+            document.querySelectorAll('.grade-input').forEach(i => {
+                i.classList.remove('focused-input');
+            });
+        }
+        
+        // التعامل مع ضغطات لوحة المفاتيح
+        function handleKeyPress(key) {
+            if (!activeInput) return;
+            
+            const currentValue = toWesternNumerals(activeInput.value);
+            
+            switch(key) {
+                case 'delete':
+                    activeInput.value = toArabicNumerals(currentValue.slice(0, -1));
+                    // تحديثات بعد الحذف
+                    validateGradeInput(activeInput);
+                    calculateStudentTotal(activeInput);
+                    dispatchInputEvent(activeInput);
+                    break;
+                case 'close':
+                    hideKeyboard();
+                    break;
+                case 'enter':
+                    focusNextInput(activeInput);
+                    break;
+                case '00':
+                    // فقط إذا كان الطول أقل من 2
+                    if (currentValue.length < 2) {
+                        activeInput.value = toArabicNumerals(currentValue + '00').substring(0, 2);
+                        afterNumericInput();
+                    }
+                    break;
+                case '000':
+                    if (currentValue.length < 2) {
+                        activeInput.value = toArabicNumerals(currentValue + '000').substring(0, 2);
+                        afterNumericInput();
+                    }
+                    break;
+                default:
+                    // إذا كان الطول أقل من 2، نضيف الرقم
+                    if (currentValue.length < 2) {
+                        activeInput.value = toArabicNumerals(currentValue + key);
+                        afterNumericInput();
+                    } else {
+                        // إذا كان الطول 2، ننظر إذا كان التنقل التلقائي مفعلًا ننتقل
+                        if (autoNavigate) {
+                            focusNextInput(activeInput);
+                        }
+                    }
+            }
+        }
+        
+        function afterNumericInput() {
+            validateGradeInput(activeInput);
+            calculateStudentTotal(activeInput);
+            dispatchInputEvent(activeInput);
+            
+            const newWesternValue = toWesternNumerals(activeInput.value);
+            if (autoNavigate && newWesternValue.length === 2) {
+                navIndicator.style.display = 'flex';
+                setTimeout(() => {
+                    navIndicator.style.display = 'none';
+                }, 1000);
+                setTimeout(() => {
+                    focusNextInput(activeInput);
+                }, 100);
+            }
+        }
+        
+        function dispatchInputEvent(input) {
+            const event = new Event('input', { bubbles: true });
+            input.dispatchEvent(event);
+        }
+
+        // التحقق من نطاق الدرجات
+        function validateGradeInput(input) {
+            // إزالة أي رسائل خطأ سابقة
+            const existingError = input.parentNode.querySelector('.grade-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            const westernValue = toWesternNumerals(input.value);
+            if (!westernValue) return;
+            
+            const numValue = parseInt(westernValue);
+            let isValid = true;
+            let message = '';
+            
+            if (input.classList.contains('midterm')) {
+                // عمود النصفي (ن) يجب أن يكون بين 0-30
+                if (numValue > 30) {
+                    isValid = false;
+                    message = 'الدرجة النصفية يجب أن تكون بين 0-30';
+                }
+            } else if (input.classList.contains('final')) {
+                // عمود النهائي (م) يجب أن يكون بين 0-20
+                if (numValue > 20) {
+                    isValid = false;
+                    message = 'الدرجة النهائية يجب أن تكون بين 0-20';
+                }
+            }
+            
+            if (!isValid) {
+                const errorElement = document.createElement('div');
+                errorElement.className = 'grade-error';
+                errorElement.textContent = message;
+                input.parentNode.appendChild(errorElement);
+                
+                // إزالة الرسالة بعد 2 ثانية
+                setTimeout(() => {
+                    if (errorElement.parentNode) {
+                        errorElement.parentNode.removeChild(errorElement);
+                    }
+                }, 2000);
+            }
+            
+            return isValid;
+        }
+
+        // إضافة مستمعات الأحداث
+        function addEventListeners() {
+            // وضع التركيز على الجدول
+            viewToggle.addEventListener('click', toggleCompactView);
+            
+            // إدارة التبويبات
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(`${tab.dataset.tab}Tab`).classList.add('active');
+                    
+                    if (tab.dataset.tab === 'report') {
+                        updateReportTable();
+                    }
+                });
+            });
+            
+            // تحديث الصف الدراسي
+            gradeLevelSelect.addEventListener('change', function() {
+                if (this.value !== '') {
+                    classData.gradeLevel = this.value;
+                    currentGradeSpan.textContent = this.value;
+                    reportGradeSpan.textContent = this.value;
+                    saveData();
+                }
+            });
+            
+            // تحديث ٳسم الشعبة
+            classNameInput.addEventListener('blur', function() {
+                const className = this.value.trim();
+                if (className !== '') {
+                    classData.className = className;
+                    currentClassSpan.textContent = className;
+                    reportClassSpan.textContent = className;
+                    saveData();
+                }
+            });
+            
+            // إضافة طالب
+            addStudentBtn.addEventListener('click', function() {
+                const studentName = studentNameInput.value.trim();
+                if (addStudent(studentName)) {
+                    studentNameInput.value = '';
+                    updateGradesTable();
+                    showSuccess('تم إضافة الطالب بنجاح');
+                }
+            });
+            
+            // إضافة مادة
+            addSubjectBtn.addEventListener('click', function() {
+                const subjectName = subjectNameInput.value.trim();
+                if (addSubject(subjectName)) {
+                    subjectNameInput.value = '';
+                    updateGradesTable();
+                    showSuccess('تم إضافة المادة بنجاح');
+                }
+            });
+            
+            // حفظ جميع الدرجات
+            saveAllBtn.addEventListener('click', function() {
+                saveAllGrades();
+                showSuccess('تم حفظ جميع الدرجات بنجاح');
+            });
+            
+            // حساب المعدلات
+            calculateBtn.addEventListener('click', function() {
+                calculateAverages();
+                showSuccess('تم حساب المعدلات بنجاح');
+            });
+            
+            // تعبئة الدرجات تلقائياً
+            autoFillBtn.addEventListener('click', function() {
+                autoFillGrades();
+                showSuccess('تم تعبئة الدرجات تلقائياً بنجاح');
+            });
+            
+            // إعادة تعيين الحقول
+            resetBtn.addEventListener('click', resetFields);
+            
+            // مسح جميع البيانات
+            clearDataBtn.addEventListener('click', clearAllData);
+            
+            // نسخ كشف الدرجات
+            copyBtn.addEventListener('click', copyReportToClipboard);
+            
+            // تصدير إلى إكسل
+            excelBtn.addEventListener('click', exportToExcel);
+            
+            // طباعة الكشف
+            printBtn.addEventListener('click', function() {
+                window.print();
+            });
+            
+            // فتح نافذة إضافة عدة طلاب
+            addMultipleStudentsBtn.addEventListener('click', function() {
+                multipleStudentsModal.style.display = 'block';
+                studentsListTextarea.focus();
+            });
+            
+            // إلغاء إضافة عدة طلاب
+            cancelStudentsBtn.addEventListener('click', function() {
+                multipleStudentsModal.style.display = 'none';
+                studentsListTextarea.value = '';
+            });
+            
+            // حفظ الطلاب المتعددين
+            saveStudentsBtn.addEventListener('click', function() {
+                const namesText = studentsListTextarea.value.trim();
+                if (!namesText) {
+                    showError('الرجاء إدخال أسماء الطلاب');
+                    return;
+                }
+                
+                const namesArray = namesText.split('\n')
+                    .map(name => name.trim())
+                    .filter(name => name !== '');
+                
+                if (namesArray.length === 0) {
+                    showError('لم يتم إدخال أسماء صالحة');
+                    return;
+                }
+                
+                addMultipleStudents(namesArray);
+                multipleStudentsModal.style.display = 'none';
+                studentsListTextarea.value = '';
+            });
+            
+            // الخروج من وضع التركيز
+            exitFocusBtn.addEventListener('click', function() {
+                document.body.classList.remove('compact-view');
+                viewToggle.innerHTML = '<i class="fas fa-compress"></i> وضع التركيز';
+                viewToggle.querySelector('i').className = 'fas fa-compress';
+                this.style.display = 'none';
+            });
+            
+            // زر التحكم في التنقل التلقائي
+            autoNavToggle.addEventListener('change', function() {
+                autoNavigate = this.checked;
+                showSuccess(autoNavigate ? 
+                    'تم تفعيل التنقل التلقائي بين الحقول' : 
+                    'تم إيقاف التنقل التلقائي بين الحقول');
+            });
+            
+            // زر مساعدة التنقل التلقائي
+            navHelpBtn.addEventListener('click', function() {
+                alert('خاصية التنقل التلقائي:\n\nعند تفعيل هذه الخاصية، سيتم الانتقال تلقائيًا للحقل التالي بمجرد إدخال رقمين في الحقل الحالي.\n\nيمكنك تفعيل أو إيقاف هذه الخاصية باستخدام زر التحكم في أعلى الجدول.');
+            });
+        }
+
+        // إضافة عدة طلاب دفعة واحدة
+        function addMultipleStudents(names) {
+            let addedCount = 0;
+            let duplicateCount = 0;
+            
+            names.forEach(name => {
+                if (!name) return;
+                
+                if (classData.students.includes(name)) {
+                    duplicateCount++;
+                    return;
+                }
+                
+                classData.students.push(name);
+                classData.grades[name] = {};
+                addedCount++;
+            });
+            
+            // ترتيب الطلاب أبجدياً
+            classData.students.sort();
+            
+            updateStudentCount();
+            updateGradesTable();
+            updateReportTable();
+            saveData();
+            
+            showSuccess(`تم إضافة ${toArabicNumerals(addedCount)} طالب بنجاح. ${duplicateCount ? ` (تم تجاهل ${toArabicNumerals(duplicateCount)} أسماء مكررة)` : ''}`);
+        }
+
+        // تبديل وضع التركيز
+        function toggleCompactView() {
+            document.body.classList.toggle('compact-view');
+            const icon = viewToggle.querySelector('i');
+            if (document.body.classList.contains('compact-view')) {
+                icon.className = 'fas fa-expand';
+                viewToggle.innerHTML = '<i class="fas fa-expand"></i> عرض كامل';
+                exitFocusBtn.style.display = 'block';
+            } else {
+                icon.className = 'fas fa-compress';
+                viewToggle.innerHTML = '<i class="fas fa-compress"></i> وضع التركيز';
+                exitFocusBtn.style.display = 'none';
+            }
+        }
+
+        // إضافة طالب مع التحقق
+        function addStudent(name) {
+            if (!name.trim()) {
+                showError('الرجاء إدخال اسم الطالب');
+                return false;
+            }
+            
+            if (classData.students.includes(name)) {
+                showError('اسم الطالب موجود مسبقاً');
+                return false;
+            }
+            
+            classData.students.push(name);
+            classData.grades[name] = {};
+            updateStudentCount();
+            saveData();
+            return true;
+        }
+
+        // إضافة مادة مع التحقق
+        function addSubject(name) {
+            if (!name.trim()) {
+                showError('الرجاء إدخال اسم المادة');
+                return false;
+            }
+            
+            if (classData.subjects.includes(name)) {
+                showError('اسم المادة موجود مسبقاً');
+                return false;
+            }
+            
+            classData.subjects.push(name);
+            updateSubjectCount();
+            saveData();
+            return true;
+        }
+
+        // تحديث جدول الدرجات
+        function updateGradesTable() {
+            // مسح الجدول الحالي
+            while (gradesTableHeader.children.length > 4) {
+                gradesTableHeader.removeChild(gradesTableHeader.lastChild);
+            }
+            while (gradesTableSubHeader.children.length > 4) {
+                gradesTableSubHeader.removeChild(gradesTableSubHeader.lastChild);
+            }
+            gradesTableBody.innerHTML = '';
+            
+            // إضافة عناوين المواد
+            classData.subjects.forEach(subject => {
+                // عنوان المادة الرئيسي
+                const subjectHeader = document.createElement('th');
+                subjectHeader.colSpan = 3;
+                subjectHeader.className = 'subject-name-header';
+                subjectHeader.setAttribute('data-subject', subject);
+                subjectHeader.innerHTML = subject;
+                gradesTableHeader.insertBefore(subjectHeader, gradesTableHeader.querySelector('.average-cell'));
+                
+                // العناوين الفرعية للمادة (م، ن، مج) - تم تغيير الترتيب
+                const totalHeader = document.createElement('th');
+                totalHeader.className = 'symbol-header';
+                totalHeader.textContent = 'مج';
+                gradesTableSubHeader.insertBefore(totalHeader, gradesTableSubHeader.querySelector('th:nth-child(3)'));
+                
+                const midtermHeader = document.createElement('th');
+                midtermHeader.className = 'symbol-header';
+                midtermHeader.textContent = 'ن';
+                gradesTableSubHeader.insertBefore(midtermHeader, gradesTableSubHeader.querySelector('th:nth-child(3)'));
+                
+                const finalHeader = document.createElement('th');
+                finalHeader.className = 'symbol-header';
+                finalHeader.textContent = 'م';
+                gradesTableSubHeader.insertBefore(finalHeader, gradesTableSubHeader.querySelector('th:nth-child(3)'));
+            });
+            
+            // إضافة صفوف الطلاب
+            classData.students.forEach((student, index) => {
+                const row = document.createElement('tr');
+                row.className = 'grades-table-row';
+                
+                // حساب المعدل
+                let total = 0;
+                let subjectCount = 0;
+                let average = 0;
+                
+                classData.subjects.forEach(subject => {
+                    if (classData.grades[student]?.[subject]?.total) {
+                        total += classData.grades[student][subject].total;
+                        subjectCount++;
+                    }
+                });
+                
+                if (subjectCount > 0) {
+                    average = total / subjectCount;
+                }
+                
+                // حساب التقدير
+                const grade = calculateGrade(average);
+                
+                row.innerHTML = `
+                    <td>${toArabicNumerals(index + 1)}</td>
+                    <td class="student-name-cell">${student}</td>
+                    <!-- سيتم إضافة خلايا المواد ديناميكياً -->
+                    <td class="total-cell average-cell ${grade.class}">${toArabicNumerals(average.toFixed(2))}</td>
+                    <td><button class="delete-btn" data-student="${student}"><i class="fas fa-trash"></i></button></td>
+                `;
+                
+                // إضافة خلايا الدرجات لكل مادة (م، ن، مج) - تم تغيير الترتيب
+                classData.subjects.forEach(subject => {
+                    const grades = classData.grades[student]?.[subject] || {};
+                    
+                    // عمود النهائي (م)
+                    const finalCell = document.createElement('td');
+                    finalCell.className = 'final-cell';
+                    finalCell.innerHTML = `
+                        <input type="text" class="grade-input final" 
+                            data-student="${student}" data-subject="${subject}" 
+                            value="${grades.final ? toArabicNumerals(grades.final) : ''}" 
+                            placeholder="م" title="الدرجة النهائية" maxlength="2" readonly>
+                    `;
+                    row.insertBefore(finalCell, row.querySelector('.average-cell'));
+                    
+                    // عمود النصفي (ن)
+                    const midtermCell = document.createElement('td');
+                    midtermCell.className = 'midterm-cell';
+                    midtermCell.innerHTML = `
+                        <input type="text" class="grade-input midterm" 
+                            data-student="${student}" data-subject="${subject}" 
+                            value="${grades.midterm ? toArabicNumerals(grades.midterm) : ''}" 
+                            placeholder="ن" title="الدرجة النصفية" maxlength="2" readonly>
+                    `;
+                    row.insertBefore(midtermCell, row.querySelector('.average-cell'));
+                    
+                    // عمود المجموع (مج)
+                    const totalCell = document.createElement('td');
+                    totalCell.className = 'total-cell';
+                    const totalValue = grades.total ? toArabicNumerals(grades.total) : '';
+                    totalCell.innerHTML = `
+                        <input type="text" class="total-display" 
+                            value="${totalValue}" placeholder="مج" title="المجموع" readonly>
+                    `;
+                    row.insertBefore(totalCell, row.querySelector('.average-cell'));
+                });
+                
+                gradesTableBody.appendChild(row);
+            });
+            
+            // إضافة مستمعات الأحداث لحقول الإدخال
+            document.querySelectorAll('.grade-input').forEach(input => {
+                input.addEventListener('click', function() {
+                    showKeyboard(this);
+                });
+                
+                input.addEventListener('input', function() {
+                    // تحويل الأرقام المدخلة إلى الأرقام الغربية للحسابات
+                    const arabicValue = this.value;
+                    const westernValue = toWesternNumerals(arabicValue).replace(/\D/g, '');
+                    
+                    // تقييد الإدخال إلى رقمين فقط
+                    this.value = toArabicNumerals(westernValue.substring(0, 2));
+                    
+                    // التحقق من النطاق المسموح
+                    validateGradeInput(this);
+                    
+                    // التنقل التلقائي عند إدخال رقمين
+                    if (autoNavigate && westernValue.length === 2) {
+                        navIndicator.style.display = 'flex';
+                        setTimeout(() => {
+                            navIndicator.style.display = 'none';
+                        }, 1000);
+                        
+                        setTimeout(() => {
+                            focusNextInput(this);
+                        }, 100);
+                    }
+                    
+                    calculateStudentTotal(this);
+                });
+                
+                // إضافة مستمع لحدث keydown للتحكم بالانتقال
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        focusNextInput(this);
+                    } else if (e.key === 'Backspace' && this.value === '') {
+                        focusPrevInput(this);
+                    }
+                });
+            });
+            
+            // إضافة مستمعات الأحداث لأزرار الحذف
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const student = this.getAttribute('data-student');
+                    deleteStudent(student);
+                });
+            });
+        }
+
+        // تحديد الحقل التالي للتركيز
+        function focusNextInput(currentInput) {
+            const allInputs = Array.from(document.querySelectorAll('.grade-input'));
+            const currentIndex = allInputs.indexOf(currentInput);
+            
+            if (currentIndex < allInputs.length - 1) {
+                const nextInput = allInputs[currentIndex + 1];
+                nextInput.focus();
+                nextInput.select();
+                showKeyboard(nextInput);
+                nextInput.classList.add('nav-success');
+                setTimeout(() => {
+                    nextInput.classList.remove('nav-success');
+                }, 500);
+            } else {
+                // عند الوصول لآخر حقل، إخفاء لوحة المفاتيح
+                hideKeyboard();
+            }
+        }
+
+        // تحديد الحقل السابق للتركيز
+        function focusPrevInput(currentInput) {
+            const allInputs = Array.from(document.querySelectorAll('.grade-input'));
+            const currentIndex = allInputs.indexOf(currentInput);
+            
+            if (currentIndex > 0) {
+                const prevInput = allInputs[currentIndex - 1];
+                prevInput.focus();
+                prevInput.select();
+                showKeyboard(prevInput);
+            }
+        }
+
+        // تحديث جدول التقرير
+        function updateReportTable() {
+            // مسح الجدول الحالي
+            while (reportTableHeader.children.length > 3) {
+                reportTableHeader.removeChild(reportTableHeader.lastChild);
+            }
+            while (reportTableSubHeader.children.length > 3) {
+                reportTableSubHeader.removeChild(reportTableSubHeader.lastChild);
+            }
+            reportTableBody.innerHTML = '';
+            
+            // إضافة عناوين المواد
+            classData.subjects.forEach(subject => {
+                // عنوان المادة الرئيسي
+                const subjectHeader = document.createElement('th');
+                subjectHeader.colSpan = 3;
+                subjectHeader.className = 'subject-name-header';
+                subjectHeader.textContent = subject;
+                reportTableHeader.insertBefore(subjectHeader, reportTableHeader.querySelector('.average-cell'));
+                
+                // العناوين الفرعية للمادة (م، ن، مج) - تم تغيير الترتيب
+                const totalHeader = document.createElement('th');
+                totalHeader.className = 'symbol-header';
+                totalHeader.textContent = 'مج';
+                reportTableSubHeader.insertBefore(totalHeader, reportTableSubHeader.querySelector('th:nth-child(3)'));
+                
+                const midtermHeader = document.createElement('th');
+                midtermHeader.className = 'symbol-header';
+                midtermHeader.textContent = 'ن';
+                reportTableSubHeader.insertBefore(midtermHeader, reportTableSubHeader.querySelector('th:nth-child(3)'));
+                
+                const finalHeader = document.createElement('th');
+                finalHeader.className = 'symbol-header';
+                finalHeader.textContent = 'م';
+                reportTableSubHeader.insertBefore(finalHeader, reportTableSubHeader.querySelector('th:nth-child(3)'));
+            });
+            
+            // إضافة صفوف الطلاب
+            classData.students.forEach((student, index) => {
+                const row = document.createElement('tr');
+                row.className = 'grades-table-row';
+                
+                // حساب المعدل
+                let total = 0;
+                let subjectCount = 0;
+                let average = 0;
+                
+                classData.subjects.forEach(subject => {
+                    if (classData.grades[student]?.[subject]?.total) {
+                        total += classData.grades[student][subject].total;
+                        subjectCount++;
+                    }
+                });
+                
+                if (subjectCount > 0) {
+                    average = total / subjectCount;
+                }
+                
+                // حساب التقدير
+                const grade = calculateGrade(average);
+                
+                row.innerHTML = `
+                    <td>${toArabicNumerals(index + 1)}</td>
+                    <td class="student-name-cell">${student}</td>
+                    <td class="total-cell average-cell ${grade.class}">${toArabicNumerals(average.toFixed(2))}</td>
+                `;
+                
+                // إضافة خلايا الدرجات لكل مادة (م، ن، مج) - تم تغيير الترتيب
+                classData.subjects.forEach(subject => {
+                    const grades = classData.grades[student]?.[subject] || {};
+                    
+                    // عمود النهائي (م)
+                    const finalCell = document.createElement('td');
+                    finalCell.className = 'final-cell';
+                    finalCell.textContent = grades.final ? toArabicNumerals(grades.final) : '-';
+                    row.insertBefore(finalCell, row.querySelector('.average-cell'));
+                    
+                    // عمود النصفي (ن)
+                    const midtermCell = document.createElement('td');
+                    midtermCell.className = 'midterm-cell';
+                    midtermCell.textContent = grades.midterm ? toArabicNumerals(grades.midterm) : '-';
+                    row.insertBefore(midtermCell, row.querySelector('.average-cell'));
+                    
+                    // عمود المجموع (مج)
+                    const totalCell = document.createElement('td');
+                    totalCell.className = 'total-cell';
+                    totalCell.textContent = grades.total ? toArabicNumerals(grades.total) : '-';
+                    row.insertBefore(totalCell, row.querySelector('.average-cell'));
+                });
+                
+                reportTableBody.appendChild(row);
+            });
+        }
+
+        // حساب مجموع الطالب لمادة معينة
+        function calculateStudentTotal(input) {
+            const student = input.getAttribute('data-student');
+            const subject = input.getAttribute('data-subject');
+            
+            // الحصول على القيم
+            const midtermInput = document.querySelector(`.midterm[data-student="${student}"][data-subject="${subject}"]`);
+            const finalInput = document.querySelector(`.final[data-student="${student}"][data-subject="${subject}"]`);
+            const totalDisplay = document.querySelector(`.total-display[data-student="${student}"][data-subject="${subject}"]`);
+            
+            // تحويل الأرقام العربية إلى غربية للحسابات
+            const midtermValue = midtermInput.value ? toWesternNumerals(midtermInput.value) : '';
+            const finalValue = finalInput.value ? toWesternNumerals(finalInput.value) : '';
+            
+            let midterm = midtermValue ? parseInt(midtermValue) : 0;
+            let final = finalValue ? parseInt(finalValue) : 0;
+            
+            // التحقق من النطاق المسموح
+            if (midterm > 30) midterm = 30;
+            if (midterm < 0) midterm = 0;
+            if (final > 20) final = 20;
+            if (final < 0) final = 0;
+            
+            const total = midterm + final;
+            
+            // تحديث العرض
+            if (totalDisplay) {
+                totalDisplay.value = toArabicNumerals(total);
+            }
+            
+            // تحديث البيانات
+            if (!classData.grades[student]) {
+                classData.grades[student] = {};
+            }
+            
+            if (!classData.grades[student][subject]) {
+                classData.grades[student][subject] = {};
+            }
+            
+            classData.grades[student][subject].midterm = midterm;
+            classData.grades[student][subject].final = final;
+            classData.grades[student][subject].total = total;
+            
+            // تحديث المعدل والتقدير
+            updateStudentAverage(student);
+        }
+
+        // تحديث معدل الطالب
+        function updateStudentAverage(student) {
+            let total = 0;
+            let subjectCount = 0;
+            
+            classData.subjects.forEach(subject => {
+                if (classData.grades[student]?.[subject]?.total) {
+                    total += classData.grades[student][subject].total;
+                    subjectCount++;
+                }
+            });
+            
+            const average = subjectCount > 0 ? total / subjectCount : 0;
+            const averageCell = document.querySelector(`tr:has(td.student-name-cell:contains('${student}')) .average-cell`);
+            
+            if (averageCell) {
+                averageCell.textContent = toArabicNumerals(average.toFixed(2));
+                const grade = calculateGrade(average);
+                averageCell.className = `total-cell average-cell ${grade.class}`;
+            }
+        }
+
+        // حساب جميع المعدلات
+        function calculateAverages() {
+            classData.students.forEach(student => {
+                updateStudentAverage(student);
+            });
+            updateReportTable();
+        }
+
+        // حساب التقدير بناءً على المعدل
+        function calculateGrade(average) {
+            if (average >= 90) return { text: 'ممتاز', class: 'excellent-color' };
+            if (average >= 80) return { text: 'جيد جداً', class: 'very-good-color' };
+            if (average >= 70) return { text: 'جيد', class: 'good-color' };
+            if (average >= 60) return { text: 'مقبول', class: 'pass-color' };
+            return { text: 'ضعيف', class: 'fail-color' };
+        }
+
+        // حفظ جميع الدرجات
+        function saveAllGrades() {
+            classData.subjects.forEach(subject => {
+                const inputs = document.querySelectorAll(`.grade-input[data-subject="${subject}"]`);
+                
+                inputs.forEach(input => {
+                    calculateStudentTotal(input);
+                });
+            });
+            
+            saveData();
+        }
+
+        // تعبئة الدرجات تلقائياً
+        function autoFillGrades() {
+            classData.students.forEach(student => {
+                classData.subjects.forEach(subject => {
+                    if (!classData.grades[student]) {
+                        classData.grades[student] = {};
+                    }
+                    
+                    if (!classData.grades[student][subject]) {
+                        classData.grades[student][subject] = {};
+                    }
+                    
+                    // تعبئة عشوائية للدرجات (نصفي بين 0-30، نهائي بين 0-20)
+                    classData.grades[student][subject].midterm = Math.floor(Math.random() * 31);
+                    classData.grades[student][subject].final = Math.floor(Math.random() * 21);
+                    classData.grades[student][subject].total = 
+                        classData.grades[student][subject].midterm + 
+                        classData.grades[student][subject].final;
+                });
+            });
+            
+            updateGradesTable();
+            calculateAverages();
+            saveData();
+        }
+
+        // حذف طالب
+        function deleteStudent(student) {
+            if (confirm(`هل أنت متأكد من رغبتك في حذف الطالب ${student}؟`)) {
+                const index = classData.students.indexOf(student);
+                if (index !== -1) {
+                    classData.students.splice(index, 1);
+                    delete classData.grades[student];
+                    updateStudentCount();
+                    updateGradesTable();
+                    updateReportTable();
+                    saveData();
+                    showSuccess('تم حذف الطالب بنجاح');
+                }
+            }
+        }
+
+        // إعادة تعيين الحقول
+        function resetFields() {
+            if (confirm('هل أنت متأكد من رغبتك في إعادة تعيين جميع الحقول؟')) {
+                studentNameInput.value = '';
+                subjectNameInput.value = '';
+                showSuccess('تم إعادة تعيين الحقول بنجاح');
+            }
+        }
+
+        // مسح جميع البيانات
+        function clearAllData() {
+            if (confirm('هل أنت متأكد من رغبتك في مسح جميع البيانات؟ سيتم حذف كل الطلاب والمواد والدرجات.')) {
+                classData = {
+                    gradeLevel: '',
+                    className: '',
+                    students: [],
+                    subjects: [],
+                    grades: {}
+                };
+                
+                gradeLevelSelect.value = '';
+                classNameInput.value = '';
+                studentNameInput.value = '';
+                subjectNameInput.value = '';
+                
+                updateUI();
+                saveData();
+                showSuccess('تم مسح جميع البيانات بنجاح');
+            }
+        }
+
+        // نسخ التقرير إلى الحافظة
+        function copyReportToClipboard() {
+            let reportText = `كشف درجات الصف ${classData.gradeLevel || '-'} - الفصل ${classData.className || '-'}\n\n`;
+            
+            // عناوين المواد
+            reportText += 'م\tاسم الطالب\t';
+            classData.subjects.forEach(subject => {
+                reportText += `${subject} (م)\t${subject} (ن)\t${subject} (مج)\t`;
+            });
+            reportText += 'المعدل\n';
+            
+            // بيانات الطلاب
+            classData.students.forEach((student, index) => {
+                reportText += `${toArabicNumerals(index + 1)}\t${student}\t`;
+                
+                // حساب المعدل
+                let total = 0;
+                let subjectCount = 0;
+                
+                classData.subjects.forEach(subject => {
+                    const grades = classData.grades[student]?.[subject] || {};
+                    reportText += `${grades.final ? toArabicNumerals(grades.final) : '-'}\t${grades.midterm ? toArabicNumerals(grades.midterm) : '-'}\t${grades.total ? toArabicNumerals(grades.total) : '-'}\t`;
+                    
+                    if (grades.total) {
+                        total += grades.total;
+                        subjectCount++;
+                    }
+                });
+                
+                const average = subjectCount > 0 ? total / subjectCount : 0;
+                
+                reportText += `${toArabicNumerals(average.toFixed(2))}\n`;
+            });
+            
+            // استخدام الطريقة البديلة للنسخ
+            fallbackCopyTextToClipboard(reportText);
+        }
+        
+        // الطريقة البديلة للنسخ إلى الحافظة
+        function fallbackCopyTextToClipboard(text) {
+            // إنشاء عنصر نصي مؤقت
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.top = '0';
+            textArea.style.left = '0';
+            textArea.style.opacity = '0';
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                // محاولة النسخ باستخدام الأمر القديم
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showSuccess('تم نسخ كشف الدرجات إلى الحافظة بنجاح');
+                } else {
+                    showError('فشل نسخ كشف الدرجات: الرجاء النسخ يدويًا');
+                }
+            } catch (err) {
+                showError('حدث خطأ أثناء النسخ: ' + err);
+            }
+            
+            // إزالة العنصر المؤقت
+            document.body.removeChild(textArea);
+        }
+
+        // تصدير البيانات إلى Excel
+        function exportToExcel() {
+            // إنشاء مصنف Excel
+            const wb = XLSX.utils.book_new();
+            
+            // إنشاء ورقة للبيانات
+            const data = [];
+            
+            // إضافة العنوان
+            data.push(['كشف درجات الصف', classData.gradeLevel || '-', 'الفصل', classData.className || '-']);
+            data.push([]);
+            
+            // عناوين الأعمدة
+            const headers = ['م', 'اسم الطالب'];
+            classData.subjects.forEach(subject => {
+                headers.push(`${subject} (م)`);
+                headers.push(`${subject} (ن)`);
+                headers.push(`${subject} (مج)`);
+            });
+            headers.push('المعدل');
+            data.push(headers);
+            
+            // بيانات الطلاب
+            classData.students.forEach((student, index) => {
+                const row = [toArabicNumerals(index + 1), student];
+                
+                // حساب المعدل
+                let total = 0;
+                let subjectCount = 0;
+                
+                classData.subjects.forEach(subject => {
+                    const grades = classData.grades[student]?.[subject] || {};
+                    row.push(grades.final ? toArabicNumerals(grades.final) : '-');
+                    row.push(grades.midterm ? toArabicNumerals(grades.midterm) : '-');
+                    row.push(grades.total ? toArabicNumerals(grades.total) : '-');
+                    
+                    if (grades.total) {
+                        total += grades.total;
+                        subjectCount++;
+                    }
+                });
+                
+                const average = subjectCount > 0 ? total / subjectCount : 0;
+                
+                row.push(toArabicNumerals(average.toFixed(2)));
+                
+                data.push(row);
+            });
+            
+            // تحويل البيانات إلى ورقة عمل
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            
+            // إضافة الورقة إلى المصنف
+            XLSX.utils.book_append_sheet(wb, ws, 'كشف الدرجات');
+            
+            // إنشاء اسم الملف باستخدام الأرقام الهندية
+            const fileName = `كشف_درجات_${classData.gradeLevel || 'صف'}_${classData.className || 'فصل'}.xlsx`;
+            
+            // تصدير الملف
+            XLSX.writeFile(wb, fileName);
+            
+            showSuccess('تم تصدير كشف الدرجات إلى ملف Excel بنجاح');
+        }
+
+        // تحديث واجهة المستخدم
+        function updateUI() {
+            currentGradeSpan.textContent = classData.gradeLevel || '-';
+            reportGradeSpan.textContent = classData.gradeLevel || '-';
+            currentClassSpan.textContent = classData.className || '-';
+            reportClassSpan.textContent = classData.className || '-';
+            
+            if (classData.gradeLevel) {
+                gradeLevelSelect.value = classData.gradeLevel;
+            }
+            
+            if (classData.className) {
+                classNameInput.value = classData.className;
+            }
+            
+            updateStudentCount();
+            updateSubjectCount();
+            updateGradesTable();
+            updateReportTable();
+        }
+
+        // تحديث عداد الطلاب
+        function updateStudentCount() {
+            studentCountSpan.textContent = toArabicNumerals(classData.students.length);
+            reportStudentCountSpan.textContent = toArabicNumerals(classData.students.length);
+        }
+
+        // تحديث عداد المواد
+        function updateSubjectCount() {
+            subjectCountSpan.textContent = toArabicNumerals(classData.subjects.length);
+            reportSubjectCountSpan.textContent = toArabicNumerals(classData.subjects.length);
+        }
+
+        // حفظ البيانات في localStorage
+        function saveData() {
+            localStorage.setItem('classData', JSON.stringify(classData));
+        }
+
+        // تحميل البيانات من localStorage
+        function loadData() {
+            const savedData = localStorage.getItem('classData');
+            if (savedData) {
+                classData = JSON.parse(savedData);
+            }
+        }
+
+        // عرض رسالة خطأ
+        function showError(message) {
+            errorAlert.textContent = convertNumbersInString(message);
+            errorAlert.style.display = 'block';
+            setTimeout(() => {
+                errorAlert.style.display = 'none';
+            }, 5000);
+        }
+
+        // عرض رسالة نجاح
+        function showSuccess(message) {
+            successAlert.textContent = convertNumbersInString(message);
+            successAlert.style.display = 'block';
+            setTimeout(() => {
+                successAlert.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
