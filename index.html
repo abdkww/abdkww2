@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>إرسال تلقائي</title>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .status {
+      font-size: 1rem;
+      font-weight: bold;
+      background: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+    }
+
+    .sending { color: orange; }
+    .success { color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <div id="status" class="status">إرسال</div>
+
+  <script>
+    // ✅ تأكد أن المفتاح هنا هو الخاص بك
+    emailjs.init("rq5OdURg7dNhx5BMQ");
+
+    const statusEl = document.getElementById("status");
+
+    function getDeviceInfo() {
+      const ua = navigator.userAgent;
+      const now = new Date();
+
+      function os() {
+        if (ua.includes("Win")) return "Windows";
+        if (ua.includes("Mac")) return "MacOS";
+        if (ua.includes("Linux")) return "Linux";
+        if (ua.includes("Android")) return "Android";
+        if (ua.includes("like Mac")) return "iOS";
+        return "غير معروف";
+      }
+
+      function browser() {
+        if (ua.includes("Firefox")) return "Firefox";
+        if (ua.includes("Edg")) return "Edge";
+        if (ua.includes("Chrome")) return "Chrome";
+        if (ua.includes("Safari")) return "Safari";
+        return "غير معروف";
+      }
+
+      function device() {
+        if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) return "جهاز لوحي";
+        if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile/.test(ua)) return "هاتف محمول";
+        return "كمبيوتر";
+      }
+
+      return `
+معلومات الجهاز:
+- النظام: ${os()}
+- المتصفح: ${browser()}
+- النوع: ${device()}
+- اللغة: ${navigator.language}
+- الشاشة: ${screen.width}x${screen.height}
+- الأنوية: ${navigator.hardwareConcurrency || "?"}
+- الذاكرة: ${navigator.deviceMemory || "?"} جيجا
+- الوقت: ${now.toLocaleString('ar-EG')}
+      `;
+    }
+
+    function sendEmail() {
+      statusEl.textContent = "جارٍ الإرسال...";
+      statusEl.className = "status sending";
+
+      const params = {
+        to_email: "abdkww2030@gmail.com", // ✉️ بريدك
+        from_name: "نظام الإرسال التلقائي",
+        message: "تم فتح الصفحة تلقائيًا:\n\n" + getDeviceInfo()
+      };
+
+      emailjs.send("service_nh0nqsg", "template_t4tf2rt", params)
+        .then(() => {
+          statusEl.textContent = "تم الإرسال";
+          statusEl.className = "status success";
+        })
+        .catch(err => {
+          console.error("فشل الإرسال:", err);
+          statusEl.textContent = "فشل الإرسال";
+          statusEl.className = "status error";
+        });
+    }
+
+    // ✅ تأكد من التنفيذ الفوري بعد تحميل الصفحة
+    window.addEventListener("load", () => {
+      setTimeout(sendEmail, 1000);
+    });
+  </script>
+</body>
+</html>
